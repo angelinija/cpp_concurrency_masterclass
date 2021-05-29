@@ -115,3 +115,48 @@ detach() +------> Thread 2 execution
 * It can be used to manage mutexes like we did with `lock_guard` objects
 * Unlike `lock_guard` objects, it does not have to acquire the lock for the associated mutex during construction
 * `unique_locks` are neither copy constructible nor copy assignable, but they are move constructible and move assignable
+
+# Section 3 -- Communication Between Threads Using Condition Variables and Futures
+## Condition Variable
+* The condition variable is a basic mechanism for waiting for an event to be triggered by another thread
+* The condition variable is associated with some event, and one or more threads can wait for that event to happen. If some thread has determined that event is satisfied, it can then notify one or more of the threads waiting for that condition variable, and wake them up and allow them to continue processing
+* Condition variable wake up can be due to:
+  * Notification from another thread
+  * Can be spurious wake
+
+### Bus Analogy
+* Event - arriving to the destination
+* Waiting threads - sleeping passenger
+* The thread that determines if the event is satisfied and notifies waiting threads - bus driver
+
+## Asynchronous Operations in C++
+* Can be created via `std::async(std::launch_policy, Function&& f, Args&&... args);`
+* Launch policy can be:
+  * `std::launch::async` - Launch in separate thread
+  * `std::launch::deferred` - Run in the current thread when `.get()` is called
+  * Can specify both separated by `|`, compiler will decide which way to run the async task
+    * Can be used to prevent from spawning more threads than the hardware allows
+
+## packaged_task
+* The class template `std::package_task` wraps any callable target so that it can be invoked asynchronously
+* Its return value or exception thrown, is stored in a shared state which can be accessed through `std::future` objects 
+* `class packaged_task<R(Args...)>;`
+* e.g, `std::packaged_task<int(int, int)> task(callable object)`
+
+## std::promise
+* Each `std::promise` object is paired with a `std::future` object
+* A thread with access to the `std::future` object can wait for the result to be set, while another thread that has access to the corresponding `std::promise` object can call `set_value()` to store the value and make the future ready
+
+# Section 4 -- Lock Based Thread Safe Data Structures and Algorithm Implementation
+## Parallel STL
+* With C++17, we can specify algorithms with a user preferred way of execution, either parallel or sequential
+* `std::sort(std::execution::par, my_data.begin(), my_data.end());`
+* Execution policy affects:
+  * Algorithm's complexity
+  * Behavior when exceptions are thrown
+  * Where, how, and when steps of an algorithm are executed
+* Three execution policies:
+  * Sequential (seq)
+  * Parallel (par)
+  * Parallel unsequential (par_unseq)
+
